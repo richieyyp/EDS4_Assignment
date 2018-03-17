@@ -1,0 +1,168 @@
+### read the dataset
+
+import numpy as np
+import pandas as pd
+
+
+test_data_original = pd.read_csv('test.csv')
+test_ids = test_data_original['id']
+train_data = pd.read_csv('train.csv').drop('id',axis=1)
+test_data = pd.read_csv('test.csv').drop('id',axis=1)
+
+### data aggregation 
+
+print(train_data.describe())
+print()
+# print(test_data.describe())
+# print()
+print(train_data.groupby('toxic').comment_text.nunique())
+print()
+print(train_data.groupby('severe_toxic').comment_text.nunique())
+print()
+print(train_data.groupby('obscene').comment_text.nunique())
+print()
+print(train_data.groupby('threat').comment_text.nunique())
+print()
+print(train_data.groupby('insult').comment_text.nunique())
+print()
+print(train_data.groupby('identity_hate').comment_text.nunique())
+
+##E empty/missing value: if returns False, then continue
+
+print(train_data.isnull().any().any())
+print(test_data.isnull().any().any())
+
+#EE Use Tfid Vectorizer
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.naive_bayes import MultinomialNB
+# from sklearn.pipeline import make_pipeline
+
+from imblearn.under_sampling import RandomUnderSampler
+from imblearn.pipeline import make_pipeline as make_pipeline_imb
+from imblearn.metrics import classification_report_imbalanced
+
+### make pipeline
+
+# RandomUnderSampler to under sample the majority (0 class)
+
+mnb1 = make_pipeline_imb(TfidfVectorizer(),RandomUnderSampler(),MultinomialNB())
+mnb2 = make_pipeline_imb(TfidfVectorizer(),RandomUnderSampler(),MultinomialNB())
+mnb3 = make_pipeline_imb(TfidfVectorizer(),RandomUnderSampler(),MultinomialNB())
+mnb4 = make_pipeline_imb(TfidfVectorizer(),RandomUnderSampler(),MultinomialNB())
+mnb5 = make_pipeline_imb(TfidfVectorizer(),RandomUnderSampler(),MultinomialNB())
+mnb6 = make_pipeline_imb(TfidfVectorizer(),RandomUnderSampler(),MultinomialNB())
+
+
+X_train = train_data['comment_text']
+y_train=train_data.drop('comment_text',axis=1)
+
+y_train1 = y_train['toxic']
+y_train2 = y_train['severe_toxic']
+y_train3 = y_train['obscene']
+y_train4 = y_train['threat']
+y_train5 = y_train['insult']
+y_train6 = y_train['identity_hate']
+
+
+
+
+mnb1.fit(X_train, y_train1)
+mnb2.fit(X_train, y_train2)
+mnb3.fit(X_train, y_train3)
+mnb4.fit(X_train, y_train4)
+mnb5.fit(X_train, y_train5)
+mnb6.fit(X_train, y_train6)
+
+
+
+label1 = mnb1.predict(X_train)
+label2 = mnb2.predict(X_train)
+label3 = mnb3.predict(X_train)
+label4 = mnb4.predict(X_train)
+label5 = mnb5.predict(X_train)
+label6 = mnb6.predict(X_train)
+
+
+### Performance evaluation
+
+from sklearn.metrics import confusion_matrix
+%matplotlib inline
+import matplotlib.pyplot as plt
+import seaborn as sns; sns.set()
+
+fig, ax = plt.subplots(figsize=(10,10)) 
+
+mat = confusion_matrix(y_train1, label1)
+sns.heatmap(mat.T, square=True, annot=True, fmt='d', cbar=False,
+            ax=ax)
+plt.xlabel('true label')
+plt.ylabel('predicted label');
+
+
+
+fig, ax = plt.subplots(figsize=(10,10)) 
+
+mat = confusion_matrix(y_train2, label2)
+sns.heatmap(mat.T, square=True, annot=True, fmt='d', cbar=False,
+            ax=ax)
+plt.xlabel('true label')
+plt.ylabel('predicted label');
+
+
+
+fig, ax = plt.subplots(figsize=(10,10)) 
+
+mat = confusion_matrix(y_train3, label3)
+sns.heatmap(mat.T, square=True, annot=True, fmt='d', cbar=False,
+            ax=ax)
+plt.xlabel('true label')
+plt.ylabel('predicted label');
+
+
+
+fig, ax = plt.subplots(figsize=(10,10)) 
+
+mat = confusion_matrix(y_train4, label4)
+sns.heatmap(mat.T, square=True, annot=True, fmt='d', cbar=False,
+            ax=ax)
+plt.xlabel('true label')
+plt.ylabel('predicted label');
+
+
+fig, ax = plt.subplots(figsize=(10,10)) 
+
+mat = confusion_matrix(y_train5, label5)
+sns.heatmap(mat.T, square=True, annot=True, fmt='d', cbar=False,
+            ax=ax)
+plt.xlabel('true label')
+plt.ylabel('predicted label');
+
+
+
+fig, ax = plt.subplots(figsize=(10,10)) 
+
+mat = confusion_matrix(y_train6, label6)
+sns.heatmap(mat.T, square=True, annot=True, fmt='d', cbar=False,
+            ax=ax)
+plt.xlabel('true label')
+plt.ylabel('predicted label');
+
+
+
+y_test_pred1 = mnb1.predict(test_data.comment_text)
+y_test_pred2 = mnb2.predict(test_data.comment_text)
+y_test_pred3 = mnb3.predict(test_data.comment_text)
+y_test_pred4 = mnb4.predict(test_data.comment_text)
+y_test_pred5 = mnb5.predict(test_data.comment_text)
+y_test_pred6 = mnb6.predict(test_data.comment_text)
+
+
+ d = {'toxic': y_test_pred1, 'severe_toxic': y_test_pred2,
+     'obscene': y_test_pred3, 'threat': y_test_pred4,
+     'insult': y_test_pred5, 'identity_hate': y_test_pred6}
+
+
+submission=pd.DataFrame(data=d)
+submission.insert(0,'id',test_ids)
+submission.to_csv('submission2.csv', index=False)
