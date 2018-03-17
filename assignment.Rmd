@@ -1,0 +1,302 @@
+
+---
+title: "Toxic Comment Classification"
+author: "Yu Yong Poh"
+date: "March 17, 2018"
+output: ioslides_presentation
+---
+
+
+
+## Chapter 1: Introduction
+
+
+[Kaggle Dataset](https://www.kaggle.com/c/jigsaw-toxic-comment-classification-challenge)
+
+*...In this competition, you're challenged to build a multi-headed model that's capable of detecting different types of of toxicity like threats, obscenity, insults, and identity-based hate better than Perspective's current models. You'll be using a dataset of comments from Wikipedia's talk page edits. Improvements to the current model will hopefully help online discussion become more productive and respectful...*
+
+Figure 1.1 ! [My Score](images/fig1_1.jpg)
+
+
+## Chapter 1: Introduction: Objective
+
+
+Objective: To detect the toxic comment(s) from a given text
+
+## Chapter 2: Background Studies
+
+*The list of reference materials that may be useful for this study*:
+
+1: Collingwood, L., Jurka, T., Boydstun, A. E., Grossman, E., & van Atteveldt, W. H. (2013). RTextTools: A supervised learning package for text classification
+
+2: Dimitriadou, E., Hornik, K., Leisch, F., Meyer, D., & Weingessel, A. (2005). Misc Functions of the Department of Statistics (e1071), TU Wien. R package version, 1-5.
+
+3: Friedman, J., Hastie, T., & Tibshirani, R. (2010). Regularization paths for generalized linear models via coordinate descent. Journal of statistical software, 33(1), 1.
+
+4: Jurka, T. P., Collingwood, L., Boydstun, A. E., Grossman, E., & van Atteveldt, W. (2012). RTextTools: Automatic text classification via supervised learning. R package version, 1(9).
+
+## Chapter 2: Background Studies (continued)
+
+5: Liaw, A., & Wiener, M. (2002). Classification and regression by randomForest. R news, 2(3), 18-22.
+
+6: Meyer, D., Hornik, K., & Feinerer, I. (2008). Text mining infrastructure in R. Journal of statistical software, 25(5), 1-54.
+
+7: Peters, A., Hothorn, T., & Lausen, B. (2002). ipred: Improved predictors. R news, 2(2), 33-36.
+
+8: Ripley, B. (2005). tree: Classification and regression trees. R package version, 1-0.
+
+## Chapter 2: Background Studies (continued)
+
+9: Tuszynski, J. (2008). caTools: Tools: moving window statistics, GIF, Base64, ROC AUC, etc. R package version, 1.
+
+10: Venables, W. N., & Ripley, B. D. (2013). Modern applied statistics with S-PLUS. Springer Science & Business Media.
+
+11:rmarkdown.rstudio.com
+
+
+## Chapter 3: Methodology: Data Aggregation
+
+
+Figure 3.1: ! [Imbalanced Data](images/fig3_1.jpg)
+
+Figure 3.2: ! [Data Summary](images/fig3_2.jpg)
+
+
+## Chapter 3: Methodology: Data Pre-processing
+
+Reduce the number of classes (for the label) to 1 :
+
+```
+AllData$Label = rowSums(AllData[,3:ncol(AllData)])
+
+AllData$Label[AllData$Label!=0] <- 1
+
+# *To aggregate the data*
+
+sum(AllData$Label==1) # 16225
+
+sum(AllData$Label==0) # 143346
+
+```
+
+## Chapter 3: Methodology: Data Pre-processing
+
+Down-sampling and train-test splitting
+
+```
+AllData1 <- downSample(AllData1$comment_text,AllData1$Label,list=TRUE)
+AllData2 <- data.frame(AllData1)
+
+colnames(AllData2) <- c("comment_text", "Label")
+
+inTrainingSet=createDataPartition(AllData2$Label, p=0.80, list=FALSE)
+View(inTrainingSet)
+
+TrainSet=AllData2[inTrainingSet,]
+TestSet=AllData2[-inTrainingSet,]
+
+AllData2 = rbind(TrainSet,TestSet)
+
+```
+## Chapter 3: Methodology: Creating a term-document matrix
+
+
+```
+doc_matrix <- create_matrix(AllData2$comment_text, language="english", 
+                            #removeNumbers=TRUE,
+                            stemWords=TRUE, 
+                            ngramLength = 1,
+                            minWordLength =3,
+                            removeSparseTerms=0.9,
+                            weighting = tm::weightTfIdf)
+```
+
+
+## Chapter 3: Methodology: Creating a container
+
+```
+container <- create_container(doc_matrix, AllData2$Label, 
+                              trainSize=1:nrow(TrainSet),
+                              testSize=(nrow(TrainSet)+1):
+                                nrow(AllData2),
+                              virgin=FALSE)
+
+
+```
+
+## Chapter 3: Methodology: Creating multiple training models
+
+
+```
+
+SVM <- train_model(container,"SVM")
+GLMNET <- train_model(container,"GLMNET")
+MAXENT <- train_model(container,"MAXENT")
+SLDA <- train_model(container,"SLDA")
+BOOSTING <- train_model(container,"BOOSTING")
+BAGGING <- train_model(container,"BAGGING")
+RF <- train_model(container,"RF")
+TREE <- train_model(container,"TREE")
+
+```
+
+## Chapter 3: Methodology: Creating respective classifiers
+
+
+```
+SVM_CLASSIFY <- classify_model(container, SVM)
+GLMNET_CLASSIFY <- classify_model(container, GLMNET)
+MAXENT_CLASSIFY <- classify_model(container, MAXENT)
+SLDA_CLASSIFY <- classify_model(container, SLDA)
+BOOSTING_CLASSIFY <- classify_model(container, BOOSTING)
+BAGGING_CLASSIFY <- classify_model(container, BAGGING)
+RF_CLASSIFY <- classify_model(container, RF)
+TREE_CLASSIFY <- classify_model(container, TREE)
+
+```
+## Chapter 4: Results and Discussion: Initial Findings Using Python
+
+
+```
+mnb1 = make_pipeline_imb(TfidfVectorizer(),RandomUnderSampler(),MultinomialNB())
+mnb2 = make_pipeline_imb(TfidfVectorizer(),RandomUnderSampler(),MultinomialNB())
+mnb3 = make_pipeline_imb(TfidfVectorizer(),RandomUnderSampler(),MultinomialNB())
+mnb4 = make_pipeline_imb(TfidfVectorizer(),RandomUnderSampler(),MultinomialNB())
+mnb5 = make_pipeline_imb(TfidfVectorizer(),RandomUnderSampler(),MultinomialNB())
+mnb6 = make_pipeline_imb(TfidfVectorizer(),RandomUnderSampler(),MultinomialNB())
+
+
+```
+
+## Chapter 4: Results and Discussion: Initial Findings Using Python
+
+
+
+
+Figure 4.1: ! [Label 1](images/fig4_1.jpg)
+Figure 4.2: ! [Label 2](images/fig4_2.jpg)
+Figure 4.3: ! [Label 3](images/fig4_3.jpg)
+Figure 4.4: ! [Label 4](images/fig4_4.jpg)
+Figure 4.5: ! [Label 5](images/fig4_5.jpg)
+Figure 4.6: ! [Label 6](images/fig4_6.jpg)
+
+
+
+## Chapter 4: Results and Discussion: Analytics
+
+
+```
+
+analytics <- create_analytics(container,
+                              cbind(SVM_CLASSIFY, 
+                                    GLMNET_CLASSIFY,
+                                    MAXENT_CLASSIFY,
+                                    SLDA_CLASSIFY,
+                                    BOOSTING_CLASSIFY, 
+                                    BAGGING_CLASSIFY,
+                                    RF_CLASSIFY,
+                                    TREE_CLASSIFY
+                                    ))
+
+
+```
+
+## Chapter 4: Results and Discussion: Analytics
+
+Figure 4.7: ! [Ensemble Summary](images/fig4_7.jpg)
+
+
+## Chapter 4: Results and Discussion: Score Summary
+
+
+```
+score_analytics <- create_scoreSummary(container, 
+                                       cbind(SVM_CLASSIFY, 
+                                             GLMNET_CLASSIFY,
+                                             MAXENT_CLASSIFY,
+                                             SLDA_CLASSIFY,
+                                             BOOSTING_CLASSIFY, 
+                                             BAGGING_CLASSIFY,
+                                             RF_CLASSIFY,
+                                             TREE_CLASSIFY
+                                       ))
+
+```
+
+
+## Chapter 4: Results and Discussion: Precision/Recall Summary
+
+
+```
+
+PRSummary <- create_precisionRecallSummary(container,
+                                           cbind(SVM_CLASSIFY, 
+                                                 GLMNET_CLASSIFY,
+                                                 MAXENT_CLASSIFY,
+                                                 SLDA_CLASSIFY,
+                                                 BOOSTING_CLASSIFY, 
+                                                 BAGGING_CLASSIFY,
+                                                 RF_CLASSIFY,
+                                                 TREE_CLASSIFY
+                                           ))                                                      
+                                           
+```                                        
+
+## Chapter 4: Results and Discussion: Precision/Recall Summary
+
+Figure 4.8: ! [Precision/Recall Summary](images/fig4_8.jpg)
+
+
+## Chapter 4: Results and Discussion: Parameter Tuning
+
+```
+* DTM serves as the feature. 
+* The higher the removeSparseTerms, the lesser the computational cost,
+but the lesser the accuracy too
+* removeSparseTerms = 0 -> Error: cannot allocate vector of size 12.5 Gb
+ 
+                                           
+```   
+
+
+## Chapter 4: Results and Discussion: Thinking corner
+
+```
+* For the above method, one TDM was used
+* What if two TDMs are used? One from those with label of 0; another 
+from those with label of 1
+* Data leakage? data redundancy?
+* Higher Accuracy? 
+                                           
+```  
+                                                                           
+## Chapter 4: Results and Discussion: Demo
+
+
+[Word Cloud Demo](https://yongpoh.shinyapps.io/Word_Cloud_Demo/)
+
+## Chapter 5: Conclusion and Future Work
+
+```
+* Emsemble classifier(s) is the best
+* R performs slower than Python, but more user-friendly
+
+                                           
+```  
+
+## Chapter 5: Conclusion and Future Work
+
+```
+* Parameter tuning/Grid Search for classifiers and 
+pre-processing (TDM formation)
+* Deep Learning
+* To finish the R Shiny project
+
+                                           
+``` 
+
+## Acknowledgement
+
+*Special Thanks to Dr.Poo Kuan Hoong and my beloved 'coursemates'. I have been enjoying the class for the past 42 days. Thank you! *
+      
+ 
