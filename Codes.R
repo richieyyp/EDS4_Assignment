@@ -1,9 +1,10 @@
 
-
 library(caret)
 library(RTextTools)
 
 AllData <- read.csv('train.csv')
+
+
 
 str(AllData)
 
