@@ -10,3 +10,6 @@ The folder contains:
 2) assignment.Rmd -> A R Markdown presentation that describes how the model works
 
 3) Images folder -> to store all relevant images
+
+4) Toxic Comment Classification Challenge Python codes.txt 
+-> a model (in Python) that uses tfidf Vectorizer and Multinomial Naive Bayes Classifier. 
