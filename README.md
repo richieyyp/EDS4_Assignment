@@ -5,7 +5,7 @@ The project aims to detect the existence of toxic comments in a given text. This
 (https://www.kaggle.com/c/jigsaw-toxic-comment-classification-challenge)
 
 The folder contains:
-1) Toxic_Comment_Classification_Under_Sampling.R -> the main R script to run the model
+1) codes.R -> the main R script to run the model
 
 2) assignment.Rmd -> A R Markdown presentation that describes how the model works
 
